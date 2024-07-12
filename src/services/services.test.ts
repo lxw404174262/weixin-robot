@@ -68,6 +68,10 @@ describe('get future data', () => {
         const data = await getFutureData('bo');
         expect(data).not.toBeNull();
     })
+    it('should return getFutureBasicData', async () => {
+        const data = await getFutureData('PK2410');
+        expect(data).not.toBeNull();
+    })
 });
 
 describe('getAIData', () => {

@@ -1,18 +1,23 @@
 import axios from "axios";
 import { decode } from 'iconv-lite';
+import { createSolutionBuilderWithWatchHost } from "typescript";
 
 const Future_API_URL = 'http://hq.sinajs.cn/' // Replace with your actual API URL
 const SUGGESTION_API_URL = 'http://suggest3.sinajs.cn/suggest/' // Replace with your actual API URL
 
 // "var hq_str_hf_XAU=\"2363.44,2356.800,2363.44,2363.79,2366.23,2354.11,15:30:00,2356.80,2356.45,0,0,0,2024-07-05,伦敦金（现货黄金）\";\n"
-function extractPrices(hq_str, symbol:string) {
+function extractPrices(hq_str, symbol: string) {
     const match = hq_str.match(/(?:"[^"]*")/);
     const data = match[0]?.slice(1, -1)?.split(',')
     // 匹配中文
-    const name  = data.find(item => /[\u4e00-\u9fa5]/.test(item))
+    const name = data.find(item => /[\u4e00-\u9fa5]/.test(item))
+    // 匹配有三位小数的数字，8732.000
+    const index = data.findIndex(item => /^\d+\.\d{3}$/.test(item))
+    if (index === -1) return `没有找到${symbol}的期货数据`
     const obj = {
-        currentPrice: data[0],
-        prePrice: data[8],
+        currentPrice: data[index],
+        // 有些期货数据没有昨日收盘价，需要判断
+        prePrice: data[index + 7] !== '0.000' ? data[index + 7] : data[index + 8]
     }
     const isGrowing = obj.currentPrice > obj.prePrice;
     const percent = ((obj.currentPrice - obj.prePrice) / obj.prePrice * 100).toFixed(2);
